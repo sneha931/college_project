@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String          @unique
+  password       String
+  email          String          @unique
+  role           RoleType
+  createdAt      DateTime        @default(now())
+  adminProfile   AdminProfile?
+  studentProfile StudentProfile?
+}
+
+model StudentProfile {
+  id             String          @id @default(uuid())
+  userId         String          @unique
+  name           String
+  placementEmail String          @unique
+  profilePic     String
+  marks10        Float
+  marks12        Float?
+  diplomaMarks   Float?
+  btechCGPA      Float
+  resumeUrl      String?
+  skills         String[]        @default([])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  experience     Int             @default(0)
+  isPlaced       Boolean         @default(false)
+  placedCompany  String?
+  EventFeedback  EventFeedback[]
+  Interview      Interview[]
+  jobMatchings   JobMatching[]
+  attendance     Attendance[]
+  user           User            @relation(fields: [userId], references: [id])
+}
+
+model AdminProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  name        String
+  email       String
+  designation String
+  collegeName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JobMatching {
+  id            String         @id @default(uuid())
+  jobId         String
+  studentId     String
+  matchedSkills String[]
+  score         Int
+  createdAt     DateTime       @default(now())
+  Interview     Interview?
+  job           JobPosts       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([studentId])
+}
+
+model Event {
+  id                     String               @id @default(uuid())
+  venue                  String
+  companyName            String
+  startTime              DateTime
+  processOfDay           String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  driveCompletedAt       DateTime?
+  feedbackRequestsSentAt DateTime?
+  jobId                  String?
+  job                    JobPosts?            @relation(fields: [jobId], references: [id])
+  EventFeedback          EventFeedback[]
+  attendanceSessions     AttendanceSession[]
+
+  @@index([jobId])
+}
+
+model EventFeedback {
+  id                String         @id
+  eventId           String
+  studentId         String
+  rating            Int
+  interviewReview   String?
+  preparationTopics String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime
+  Event             Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  StudentProfile    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, studentId])
+  @@index([eventId])
+  @@index([studentId])
+}
+
+model Interview {
+  id              String            @id
+  jobMatchingId   String            @unique
+  studentId       String
+  jobId           String
+  isShortlisted   Boolean           @default(false)
+  status          InterviewStatus   @default(NOT_SCHEDULED)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  aiScore         Float?
+  finalScore      Float?
+  verdict         String?
+  violationCount  Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  JobPosts        JobPosts          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  JobMatching     JobMatching       @relation(fields: [jobMatchingId], references: [id], onDelete: Cascade)
+  StudentProfile  StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  InterviewAnswer InterviewAnswer[]
+  Violation       Violation[]
+}
+
+model InterviewAnswer {
+  id          String    @id
+  interviewId String
+  question    String
+  transcript  String
+  score       Float
+  feedback    String?
+  createdAt   DateTime  @default(now())
+  Interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+model JobPosts {
+  id                 String        @id
+  companyname        String
+  skills             String[]      @default([])
+  description        String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime
+  jobrole            String
+  salary             Int           @default(0)
+  excelUrl           String?
+  shortlistReady     Boolean       @default(false)
+  minCGPA            Float         @default(6.5)
+  minExperience      Int           @default(0)
+  minMarks10         Float         @default(50)
+  minMarks12         Float?
+  interviewScheduled Boolean       @default(false)
+  isExternal         Boolean       @default(false)
+  isApproved         Boolean       @default(true)
+  externalSource     String?
+  externalJobId      String?
+  events             Event[]
+  Interview          Interview[]
+  jobMatchings       JobMatching[]
+
+  @@index([isExternal])
+  @@index([isApproved])
+}
+
+model Violation {
+  id          String        @id
+  interviewId String
+  timestamp   DateTime      @default(now())
+  type        ViolationType
+  Interview   Interview     @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+}
+
+model AttendanceSession {
+  id         String        @id @default(uuid())
+  sessionId  String        @unique
+  eventId    String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  event      Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  attendance Attendance[]
+
+  @@index([eventId])
+}
+
+model Attendance {
+  id                 String             @id @default(uuid())
+  studentId          String
+  sessionId          String
+  timestamp          DateTime           @default(now())
+  student            StudentProfile     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attendanceSession  AttendanceSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, sessionId])
+  @@index([sessionId])
+  @@index([studentId])
+}
+
+enum InterviewStatus {
+  NOT_SCHEDULED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  TERMINATED
+}
+
+enum RoleType {
+  admin
+  student
+}
+
+enum ViolationType {
+  TAB_SWITCH
+  NO_FACE
+  MULTIPLE_FACE
+  LOOK_AWAY
+  BACKGROUND_VOICE
+}
