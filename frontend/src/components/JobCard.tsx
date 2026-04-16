@@ -236,7 +236,7 @@ const JobCard = ({
             </div>
           )}
 
-          {!showAdminActions && job.interviewScheduled && (() => {
+          {!showAdminActions && job.interviewScheduled && interviewStatus && (() => {
             const status = interviewStatus;
 
             if (status === 'COMPLETED') {

@@ -557,6 +557,7 @@ const StudentProfileSection = () => {
       setIsEditing(false);
       setSuccess('Profile updated successfully!');
       setTimeout(() => setSuccess(''), 5000);
+      await checkProfile();
     } catch {
       setError('Failed to update profile. Please try again.');
       setTimeout(() => setError(''), 5000);
