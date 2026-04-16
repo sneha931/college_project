@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// ⚠️ Replace with your laptop's IP address (run `ipconfig` on Windows)
-// Make sure your mobile and laptop are on the SAME Wi-Fi network
-export const BASE_URL = "http://192.168.0.106:5000";
+// ⚠️ Set to your production backend URL
+export const BASE_URL = "https://college-project-1c3k.onrender.com";
 
 const api = axios.create({
   baseURL: BASE_URL,

@@ -453,25 +453,9 @@ export const fetchExternalJobs = async (
  * Returns count of saved jobs
  */
 export const saveExternalJobs = async (
-  source: keyof typeof EXTERNAL_APIS = 'theirstack',
-  defaultAdminId?: string,
+  source: keyof typeof EXTERNAL_APIS = 'theirstack'
 ): Promise<{ saved: number; skipped: number; errors: number }> => {
   try {
-    // Get system admin (first admin) if not provided
-    let adminId = defaultAdminId;
-    if (!adminId) {
-      const systemAdmin = await prisma.adminProfile.findFirst({
-        orderBy: { createdAt: 'asc' },
-      });
-
-      if (!systemAdmin) {
-        throw new Error(
-          'No admin found in system. Please create an admin first.',
-        );
-      }
-
-      adminId = systemAdmin.id;
-    }
 
     const externalJobs = await fetchExternalJobs(source);
 

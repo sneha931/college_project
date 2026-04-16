@@ -15,13 +15,11 @@ import Logger from '../../logger.js';
 export const importExternalJobs = async (req: Request, res: Response) => {
   try {
     const { source = 'theirstack' } = req.body;
-    const adminId = undefined; // Will use first admin from DB
-
     Logger.info(
       `Admin ${req.user?.id} initiating external job import from ${source}`,
     );
 
-    const result = await saveExternalJobs(source, adminId);
+    const result = await saveExternalJobs(source);
 
     res.status(200).json({
       success: true,
